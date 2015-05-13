@@ -99,13 +99,15 @@ class Youtube {
 																									'maxResults' => $maxResults
 																								));
 
-			$items = [];
+			$items = array();
 			foreach ($playlistItemsResponse['items'] as $playlistItem) 
 			{
-				$video = [];
+                $video = array();
 				$video['videoId'] 		= $playlistItem['snippet']['resourceId']['videoId'];
 				$video['title'] 		= $playlistItem['snippet']['title'];
-				$video['publishedAt'] 	= $playlistItem['snippet']['publishedAt'];
+                $video['description'] 	= $playlistItem['snippet']['description'];
+                $video['tags'] 	        = $playlistItem['tags'];
+                $video['publishedAt'] 	= $playlistItem['snippet']['publishedAt'];
 
 				array_push($items, $video);
 			}
@@ -187,46 +189,6 @@ class Youtube {
 		return $result->getId();
 
 	}
-
-	/**
-	 * Deletes a video from the account specified by the Access Token
-	 * Attempts to automatically refresh the token if it's expired.
-	 *
-	 * @param $id of the video to delete
-	 * @return true if the video was deleted and false if it was not
-	 * @throws \Exception
-	 */
-	public function delete($video_id)
-	{
-		$accessToken = $this->client->getAccessToken();
-
-		if (is_null($accessToken))
-		{
-			throw new \Exception('You need an access token to delete.');
-		}
-
-		// Attempt to refresh the access token if it's expired and save the new one in the database
-		if ($this->client->isAccessTokenExpired())
-		{
-			$accessToken = json_decode($accessToken);
-			$refreshToken = $accessToken->refresh_token;
-			$this->client->refreshToken($refreshToken);
-			$newAccessToken = $this->client->getAccessToken();
-			$this->saveAccessTokenToDB($newAccessToken);
-		}
-
-		$result = $this->youtube->videos->delete($video_id);
-
-		if (!$result)
-		{
-			throw new \Exception("Couldn't delete the video from the youtube account.");
-		}
-
-		return $result->getId();
-
-	}
-
-
 
 	/**
 	 * Method calls are passed on to the injected instance of \Google_Client. Used for calls like:
